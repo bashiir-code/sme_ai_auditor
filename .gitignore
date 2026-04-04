@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Dependency directories
+pip-wheel-metadata/
+build/
+dist/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment variables
+.env
+.env.*
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+
+# Logs
+*.log
+
+# Local data
+qdrant_data/
+
+# GitHub workflows
+# If you want to keep workflow logs or artifacts locally, do not ignore them here unless intentional
+
+# Python packaging
+*.egg
+
+# Temporary files
+*.tmp
+*~

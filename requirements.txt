@@ -1,0 +1,30 @@
+# --- Orchestration & Vector Database ---
+haystack-ai>=2.10.0           # Core RAG framework [cite: 5, 8]
+qdrant-client                 # High-performance vector storage [cite: 8]
+
+# --- Inference & LLM SDKs ---
+mistralai                     # Official SDK for Mistral Large 2 [cite: 8]
+
+
+# --- Secure Document Parsing ---
+# CRITICAL: Version 2.15.0+ required to patch CVE-2026-24009 (RCE) [cite: 6, 41]
+docling>=2.15.0               # High-fidelity PDF/Table parsing [cite: 6, 41]
+
+# --- Senior-Grade Logic & Validation ---
+pydantic>=2.10.0              # Strict data validation for compliance results [cite: 5, 43]
+python-dotenv                 # Environment variable management
+structlog                     # Production-grade structured logging [cite: 10]
+
+# --- Observability & Audit Trails ---
+langfuse                      # Trace AI reasoning and cost per audit [cite: 8, 48]
+
+# --- Industrial Reporting (HTML/CSS to PDF) ---
+# Better than fpdf2 for complex regulatory layouts [cite: 9, 56]
+weasyprint                    # PDF engine with full CSS support [cite: 9, 57]
+jinja2                        # Logic-heavy report templating [cite: 9, 58]
+markdown                      # Content formatting [cite: 59]
+
+# --- Testing Suite ---
+pytest                        # Standard testing framework [cite: 12]
+pytest-asyncio                # Required for Haystack 2.x async pipelines [cite: 12]
+pytest-mock                   # Mocking external legal APIs
