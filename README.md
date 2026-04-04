@@ -265,3 +265,4 @@ This project is licensed under the [MIT License](LICENSE.md) (to be created).
 [4] WeasyPrint. (n.d.). *Documentation*. Retrieved from https://weasyprint.org/docs/
 [5] DeepInfra. (2026, February 2). *Qwen API Pricing Guide 2026: Max Performance on a Budget*. Retrieved from https://deepinfra.com/blog/qwen-api-pricing-2026-guide
 [6] Qwen AI. (2024, September 18). *Qwen2.5: A Party of Foundation Models!*. Retrieved from https://qwen.ai/blog?id=qwen2.5
+# sme_ai_auditor
