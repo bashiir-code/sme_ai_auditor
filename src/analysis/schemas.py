@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class RiskCategory(str, Enum):
     PROHIBITED = "Prohibited"
@@ -14,6 +14,8 @@ class ArticleReference(BaseModel):
     description: str = Field(..., min_length=1, description="Short summary of the requirement")
 
 class ComplianceFinding(BaseModel):
+    model_config = ConfigDict(strict=True)
+
     criterion: str = Field(..., min_length=1, description="The specific rule or standard being checked")
     is_compliant: bool = Field(..., description="Binary compliance status")
     evidence: str = Field(..., min_length=1, description="Textual evidence from the SME documentation")
