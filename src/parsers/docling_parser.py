@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from docling.document_converter import DocumentConverter
-from docling.datamodel.pipeline_options import PdfPipelineOptions # ✅ Senior/2026 Standard
-from docling.document_converter.table_structure_model import TableStructureModel
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.datamodel.input_format import InputFormat
 from langfuse.decorators import observe
 import structlog
 
@@ -11,18 +11,22 @@ class DoclingParser:
     """
     A parser for converting documents to Markdown with metadata using Docling.
     Optimized for 16GB systems with focus on table fidelity and observability.
+    Supports both PDF and DOCX input formats.
     """
 
     def __init__(self):
         """Initialize the parser with optimized PDF pipeline options."""
         self.converter = DocumentConverter()
 
-        # Configure for 16GB system
+        # Configure for 16GB system with table structure support
         self.pdf_options = PdfPipelineOptions(
-            provider="pypdfium2",
+            pdf_backend="pypdfium2",
             num_threads=1,
-            enable_table_structure_model=True
+            do_table_structure=True
         )
+
+        # Support both PDF and DOCX formats
+        self.allowed_formats = [InputFormat.PDF, InputFormat.DOCX]
 
     @observe
     def parse(self, file_path: str) -> Dict[str, Any]:
@@ -50,16 +54,11 @@ class DoclingParser:
                 pdf_options=self.pdf_options
             )
 
-            # Extract table structure information if available
-            table_structure = None
-            if hasattr(result, 'table_structure'):
-                table_structure = TableStructureModel(result.table_structure)
-
             metadata = {
                 "file_path": file_path,
                 "page_count": getattr(result, 'page_count', None),
-                "has_tables": table_structure is not None,
-                "table_structure": table_structure
+                "has_tables": getattr(result, 'has_tables', False),
+                "table_structure": getattr(result, 'table_structure', None)
             }
 
             logger.info("Document parsed successfully", file_path=file_path)
