@@ -127,7 +127,7 @@ def test_ai_act_audit_report_model():
 
 def test_json_schema_generation():
     """Test that models can generate JSON schemas with detailed checks"""
-    schema = AIActAuditReport.schema()
+    schema = AIActAuditReport.model_json_schema()
 
     # Basic structure checks
     assert "properties" in schema
@@ -168,20 +168,20 @@ def test_model_serialization():
     )
 
     # Test dict serialization
-    report_dict = report.dict()
+    report_dict = report.model_dump()
     assert report_dict["system_name"] == "Test-System"
     assert report_dict["risk_level"] == "Minimal Risk"
     assert len(report_dict["primary_articles"]) == 1
     assert len(report_dict["findings"]) == 1
 
     # Test JSON serialization
-    report_json = report.json()
+    report_json = report.model_dump_json()
     assert "Test-System" in report_json
     assert "Minimal Risk" in report_json
 
     # Test round-trip (dict -> model -> dict)
-    reconstructed = AIActAuditReport.parse_obj(report_dict)
-    assert reconstructed.dict() == report_dict
+    reconstructed = AIActAuditReport.model_validate(report_dict)
+    assert reconstructed.model_dump() == report_dict
 
 def test_model_equality():
     """Test that models implement equality correctly"""
