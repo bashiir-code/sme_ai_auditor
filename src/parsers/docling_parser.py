@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from docling.document_converter import DocumentConverter
-from docling.document_converter.pipeline import PdfPipelineOptions
+from docling.datamodel.pipeline_options import PdfPipelineOptions # ✅ Senior/2026 Standard
 from docling.document_converter.table_structure_model import TableStructureModel
 from langfuse.decorators import observe
 import structlog
