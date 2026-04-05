@@ -8,7 +8,7 @@ from langfuse.decorators import langfuse_context
 def test_evidence_pack_prohibition_check():
     # 1. Setup paths
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    evidence_path = os.path.join(base_dir, "data/sme_docs_examples/AI_Compliance_Advisor_Evidence_Pack.docx")
+    evidence_path = os.path.join(base_dir, "data/sme_docs_examples/AI_Compliance_Advisor_Evidence_Pack.md")
 
     # 2. Ingest (Docling) - Optimized for 16GB
     parser = DoclingParser()
