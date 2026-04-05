@@ -26,10 +26,18 @@ source .venv/bin/activate
 # 3. Install Dependencies
 # Pinned to 2.84.0+ for CVE-2026-24009 security patch as evaluated 
 echo "📦 Installing project dependencies..."
-uv pip install aider-chat "docling>=2.84.0" qdrant-client haystack-ai \
+uv pip install "docling>=2.84.0" qdrant-client haystack-ai \
                mistralai langfuse pytest weasyprint jinja2 structlog
 
-# 4. Install Goose CLI (Binary)
+# 4. Install Aider (Isolated Tool)
+echo "📦 Installing Aider as an isolated tool..."
+if ! command -v aider &> /dev/null; then
+    uv tool install aider-chat
+else
+    echo "✅ Aider is already installed."
+fi
+
+# 5. Install Goose CLI (Binary)
 # Using the corrected 2026 stable installer to avoid 404 errors
 if ! command -v goose &> /dev/null; then
     echo "📦 Installing Goose CLI..."
@@ -40,7 +48,7 @@ else
     echo "✅ Goose is already installed."
 fi
 
-# 5. Handle .env Configuration
+# 6. Handle .env Configuration
 if [ ! -f .env ]; then
     if [ -f .env.template ]; then
         echo "📄 Creating .env from .env.template..."
@@ -52,10 +60,10 @@ if [ ! -f .env ]; then
     fi
 fi
 
-# 6. Local Aider Config (Small & Specific)
+# 7. Local Aider Config (Small & Specific)
 echo "⚙️  Configuring Aider..."
 cat <<EOF > .aider.conf.yml
-model: mistral/mistral-large-latest
+model: mistral/devstral-2512
 edit-format: whole
 stream: true
 map-tokens: 1024

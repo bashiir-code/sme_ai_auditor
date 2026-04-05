@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
-from mistralai.client import MistralClient
-from mistralai.models.chat_completion import ChatMessage
-from langfuse.decorators import observe
+from mistralai.client import Mistral
+from mistralai.client.models import ChatCompletionRequestMessage
+from langfuse import observe
 import structlog
 from src.analysis.schemas import AIActAuditReport, ComplianceFinding, ArticleReference
 import json
@@ -22,7 +22,7 @@ class AIActClassifier:
             api_key: Mistral AI API key
             model: Mistral model to use (default: mistral-large-latest)
         """
-        self.client = MistralClient(api_key=api_key)
+        self.client = Mistral(api_key=api_key)
         self.model = model
         self.red_line_articles = ["Article 5"]  # Prohibited AI practices
 
@@ -220,7 +220,7 @@ class AIActClassifier:
     def _call_mistral_api(self, prompt: str) -> str:
         """Helper method to call Mistral API with error handling."""
         try:
-            messages = [ChatMessage(role="user", content=prompt)]
+            messages = [ChatCompletionRequestMessage(role="user", content=prompt)]
             response = self.client.chat(
                 model=self.model,
                 messages=messages,

@@ -10,12 +10,17 @@ dependencies = [
     "pytest",
     "pytest-asyncio",
     "structlog",
-    "pydantic>=2.10.0"
+    "pydantic>=2.10.0",
+    "pypdfium2" # Explicitly required for the 16GB RAM backend optimization [cite: 127]
 ]
-
-[tool.pytest.ini_options]
-pythonpath = ["."]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# Senior Move: Explicitly mapping the src-layout 
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

@@ -53,3 +53,4 @@ qdrant_data/
 # Temporary files
 *.tmp
 *~
+.aider*

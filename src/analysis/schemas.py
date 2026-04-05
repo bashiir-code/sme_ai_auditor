@@ -34,7 +34,6 @@ class AIActAuditReport(BaseModel):
     summary: str = Field(..., min_length=1, description="High-level executive summary for the SME")
 
     class Config:
-        # Senior Tip: Enables JSON schema generation for Haystack 2.x output parsers
         json_schema_extra = {
             "example": {
                 "system_name": "SME-Chat-Bot-v1",

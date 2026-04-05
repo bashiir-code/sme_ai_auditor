@@ -1,8 +1,7 @@
 from typing import Dict, Any
-from docling.document_converter import DocumentConverter
+from docling.document_converter import DocumentConverter, InputFormat
 from docling.datamodel.pipeline_options import PdfPipelineOptions
-from docling.datamodel.input_format import InputFormat
-from langfuse.decorators import observe
+from langfuse import observe
 import structlog
 
 logger = structlog.get_logger()
