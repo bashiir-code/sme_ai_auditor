@@ -1,5 +1,11 @@
+import sys
+import os
 import pytest
 from pydantic import ValidationError
+
+# Add the src directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from src.analysis.schemas import RiskCategory, ArticleReference, ComplianceFinding, AIActAuditReport
 
 def test_risk_category_enum():
