@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SME AI Auditor | Sovereign Compliance Pilot</title>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap">
+    <style>
+        :root {
+            --brand-blue: #3b82f6;
+            --brand-glow: rgba(59, 130, 246, 0.15);
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: radial-gradient(circle at top right, #0f172a, #020617);
+            background-attachment: fixed;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-dark {
+            background: rgba(2, 6, 17, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .audit-scroll::-webkit-scrollbar { width: 6px; }
+        .audit-scroll::-webkit-scrollbar-track { background: transparent; }
+        .audit-scroll::-webkit-scrollbar-thumb { 
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 10px;
+        }
+        .audit-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px var(--brand-glow); }
+            50% { box-shadow: 0 0 40px var(--brand-glow); }
+        }
+        .glow-active { animation: pulse-glow 3s infinite ease-in-out; }
+        
+        /* HTMX Indicator Styling */
+        .htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; }
+        .htmx-request .htmx-indicator { opacity: 1; }
+        .htmx-request.htmx-indicator { opacity: 1; }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen flex flex-col lg:flex-row relative">
+
+    <!-- SIDEBAR: Navigation & Health -->
+    <aside class="w-full lg:w-80 lg:fixed lg:h-full glass border-r border-white/5 flex flex-col p-8 z-30">
+        <div class="flex items-center space-x-4 mb-12">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/40">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white">Sovereign Audit</h1>
+                <p class="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-semibold">Pilot v2.5.0</p>
+            </div>
+        </div>
+
+        <div class="space-y-8 flex-grow">
+            <!-- Health Monitoring Group -->
+            <section class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Stack Integrity</h3>
+                    <div id="loading-spinner" class="htmx-indicator">
+                        <svg class="animate-spin h-3 w-3 text-blue-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </div>
+                </div>
+                <div id="health-monitor" 
+                     hx-get="/health" 
+                     hx-trigger="load, every 30s"
+                     hx-indicator="#loading-spinner"
+                     class="space-y-3">
+                    <div class="h-16 bg-white/5 rounded-2xl animate-pulse"></div>
+                    <div class="h-16 bg-white/5 rounded-2xl animate-pulse"></div>
+                </div>
+            </section>
+
+            <!-- Quick Links -->
+            <nav class="space-y-2">
+                <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">Registry</h3>
+                <a href="/reports" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors group">
+                    <svg class="w-5 h-5 text-slate-500 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="text-sm font-medium text-slate-300">Audit Archives</span>
+                </a>
+                <div class="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                    <p class="text-[11px] text-blue-400 leading-relaxed font-medium">
+                        Localized analysis engine connected to Finnish compliance datasets.
+                    </p>
+                </div>
+            </nav>
+        </div>
+
+        <div class="mt-auto pt-8 border-t border-white/5 hidden lg:block">
+            <div class="flex items-center justify-between p-3 glass-dark rounded-xl">
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Node Helsinki</span>
+                </div>
+                <span class="text-[10px] mono text-slate-600">Secure</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow lg:ml-80 flex flex-col h-screen overflow-hidden relative items-center">
+        
+        <div class="fixed top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 blur-[150px] rounded-full -z-10 pointer-events-none"></div>
+        <div class="fixed bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/5 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+
+        <div class="w-full max-w-7xl h-full flex flex-col p-6 lg:p-10 space-y-6">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+                <div>
+                    <h2 class="text-2xl lg:text-3xl font-extrabold tracking-tight text-white mb-1">Audit Commander</h2>
+                    <p class="text-slate-400 text-sm lg:text-base max-w-2xl leading-relaxed">Sovereign compliance verification for EU AI & Data Acts.</p>
+                </div>
+                <div id="status-badge" class="self-start flex items-center space-x-3 px-4 py-2 glass rounded-2xl border border-white/10 shadow-xl shadow-black/20">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">System Standby</span>
+                </div>
+            </header>
+
+            <!-- AUDIT GRID -->
+            <section class="grid grid-cols-1 xl:grid-cols-5 gap-6 lg:gap-8 flex-grow min-h-0 pb-4">
+                <!-- Configuration Panel -->
+                <div class="xl:col-span-2 flex flex-col min-h-0">
+                    <div class="glass p-6 lg:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden flex flex-col border border-white/10">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-40"></div>
+                        
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center shrink-0">
+                            <svg class="w-5 h-5 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            Sequence Parameters
+                        </h3>
+                        
+                        <form hx-post="/audit/run" 
+                              hx-target="#sse-trigger" 
+                              hx-swap="innerHTML"
+                              enctype="multipart/form-data"
+                              class="space-y-6 flex flex-col flex-grow min-h-0">
+                            
+                            <div class="space-y-3 shrink-0">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">AI System Context</label>
+                                <textarea name="system_description" 
+                                          rows="4" 
+                                          placeholder="Describe the system architecture..."
+                                          class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder-slate-600 resize-none hover:bg-white/[0.08]"
+                                          required></textarea>
+                            </div>
+
+                            <div class="space-y-3 flex-grow min-h-0 flex flex-col">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 shrink-0">Evidence Pack</label>
+                                <div class="relative group/upload flex-grow min-h-[100px]">
+                                    <input type="file" name="docs" multiple class="hidden" id="file-input">
+                                    <label for="file-input" class="absolute inset-0 flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-[1.5rem] p-4 cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group shadow-inner">
+                                        <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-500 font-bold text-blue-500">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                        </div>
+                                        <span class="text-sm font-semibold text-slate-400 group-hover:text-white transition-colors">Ingest Documents</span>
+                                        <span class="text-[10px] text-slate-600 mt-1 font-medium">PDF / DOCX</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 shrink-0">
+                                <button type="submit" 
+                                        class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-2xl shadow-blue-900/30 active:scale-[0.98] transition-all flex items-center justify-center space-x-3 group overflow-hidden relative">
+                                    <div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+                                    <span class="tracking-widest uppercase text-xs relative z-10">Launch Sequence</span>
+                                    <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                </button>
+                            </div>
+
+                            <div id="sse-trigger" class="empty:hidden shrink-0"></div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Terminal Output Panel -->
+                <div class="xl:col-span-3 flex flex-col glass-dark rounded-[2rem] overflow-hidden shadow-2xl border border-white/10 min-h-0">
+                    <div class="bg-white/5 px-8 py-4 flex justify-between items-center border-b border-white/10 shrink-0">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex space-x-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/40"></div>
+                                <div class="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/40"></div>
+                                <div class="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/40"></div>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-4 mono">Telemetry_Feed</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="px-2 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center space-x-2">
+                                <div class="w-1 h-1 rounded-full bg-blue-400 animate-pulse"></div>
+                                <span class="text-[9px] font-bold text-blue-400 mono uppercase">Encrypted</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="audit-console" 
+                         class="flex-grow p-8 audit-scroll scroll-smooth bg-black/40 overflow-y-auto">
+                        <div class="flex items-start space-x-4 mb-4">
+                            <span class="text-blue-500/50 mono text-xs mt-1">>></span>
+                            <div class="space-y-1">
+                                <p class="text-slate-500 font-bold text-[11px] mono">SYSTEM_INIT_SUCCESS</p>
+                                <p class="text-slate-600 font-medium text-sm">Awaiting telemetry feed from Pilot Commander...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Auto-scroll console when new items are added
+        const consoleEl = document.getElementById('audit-console');
+        const observer = new MutationObserver(() => {
+            consoleEl.scrollTo({
+                top: consoleEl.scrollHeight,
+                behavior: 'smooth'
+            });
+        });
+        observer.observe(consoleEl, { childList: true });
+
+        // Visual feedback for file selection
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const label = this.nextElementSibling.querySelector('span:first-of-type');
+            if (this.files.length > 0) {
+                label.innerText = `${this.files.length} Evidence Docs Staged`;
+                label.classList.remove('text-slate-400');
+                label.classList.add('text-blue-400');
+            }
+        });
+    </script>
+</body>
+</html>

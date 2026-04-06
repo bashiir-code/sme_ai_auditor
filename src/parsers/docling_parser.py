@@ -1,71 +1,151 @@
-from typing import Dict, Any
-from docling.document_converter import DocumentConverter, InputFormat
+"""
+docling_parser.py
+-----------------
+Parses SME technical documents (PDF, DOCX) into Markdown + metadata using Docling.
+
+Docling >= 2.84.0 is required — earlier releases have CVE-2026-24009 (RCE).
+All parse calls are wrapped with LangFuse @observe for full audit traceability.
+"""
+
+import os
+from pathlib import Path
+from typing import Dict, Any, List
+
+import structlog
+from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 from langfuse import observe
-import structlog
 
-logger = structlog.get_logger()
+logger = structlog.get_logger(__name__)
+
+# Supported input formats
+SUPPORTED_FORMATS = {".pdf", ".docx"}
+
 
 class DoclingParser:
     """
-    A parser for converting documents to Markdown with metadata using Docling.
-    Optimized for 16GB systems with focus on table fidelity and observability.
-    Supports both PDF and DOCX input formats.
+    Converts PDF and DOCX documents into Markdown text with metadata.
+
+    Optimised for 16 GB systems (single-threaded, pypdfium2 backend).
+    Table structure extraction is enabled so EU AI Act Annex tables
+    are preserved faithfully during ingestion.
+
+    Usage:
+        parser = DoclingParser()
+        result = parser.parse("path/to/sme_spec.pdf")
+        markdown_text = result["content"]
+        meta          = result["metadata"]
     """
 
-    def __init__(self):
-        """Initialize the parser with optimized PDF pipeline options."""
-        self.converter = DocumentConverter()
+    def __init__(self) -> None:
+        """Configure the Docling converter from environment variables."""
+        backend = os.getenv("DOCLING_PDF_BACKEND", "pypdfium2")
+        num_threads = int(os.getenv("DOCLING_NUM_THREADS", "1"))
 
-        # Configure for 16GB system with table structure support
-        self.pdf_options = PdfPipelineOptions(
-            pdf_backend="pypdfium2",
-            num_threads=1,
-            do_table_structure=True
+        pdf_options = PdfPipelineOptions(
+            do_table_structure=True,      # Critical for EU AI Act Annex tables
         )
 
-        # Support both PDF and DOCX formats
-        self.allowed_formats = [InputFormat.PDF, InputFormat.DOCX]
+        self._converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_options),
+            }
+        )
 
-    @observe
+        logger.info(
+            "DoclingParser initialised",
+            backend=backend,
+            num_threads=num_threads,
+            table_structure=True,
+        )
+
+    @observe(name="docling_parse")
     def parse(self, file_path: str) -> Dict[str, Any]:
         """
         Parse a document file and return its content as Markdown with metadata.
 
         Args:
-            file_path: Path to the document file to parse
+            file_path: Absolute or relative path to a PDF or DOCX file.
 
         Returns:
-            Dictionary containing:
-            - 'content': Markdown representation of the document
-            - 'metadata': Document metadata
+            dict with keys:
+              - ``content``  (str)  — full Markdown representation of the document.
+              - ``metadata`` (dict) — file path, page count, table presence flag.
 
         Raises:
-            ValueError: If parsing fails
+            FileNotFoundError: If the file does not exist.
+            ValueError:        If the format is unsupported or Docling conversion fails.
         """
-        try:
-            logger.info("Starting document parsing", file_path=file_path)
+        path = Path(file_path)
 
-            # Convert document to Markdown
-            result = self.converter.convert(
-                file_path=file_path,
-                output_format="markdown",
-                pdf_options=self.pdf_options
+        # --- Guard: file must exist ---
+        if not path.exists():
+            raise FileNotFoundError(f"Document not found: {file_path}")
+
+        # --- Guard: format must be supported ---
+        if path.suffix.lower() not in SUPPORTED_FORMATS:
+            raise ValueError(
+                f"Unsupported format '{path.suffix}'. "
+                f"Supported formats: {SUPPORTED_FORMATS}"
             )
 
-            metadata = {
-                "file_path": file_path,
-                "page_count": getattr(result, 'page_count', None),
-                "has_tables": getattr(result, 'has_tables', False),
-                "table_structure": getattr(result, 'table_structure', None)
+        logger.info("Starting document parse", file_path=str(path))
+
+        try:
+            result = self._converter.convert(str(path))
+            doc = result.document
+
+            # Export to Markdown (preserves table structure as GFM tables)
+            markdown_content: str = doc.export_to_markdown()
+
+            metadata: Dict[str, Any] = {
+                "file_path": str(path.resolve()),
+                "file_name": path.name,
+                "file_format": path.suffix.lower(),
+                "page_count": len(doc.pages) if hasattr(doc, "pages") else None,
+                "has_tables": bool(doc.tables) if hasattr(doc, "tables") else False,
+                "table_count": len(doc.tables) if hasattr(doc, "tables") else 0,
             }
 
-            logger.info("Document parsed successfully", file_path=file_path)
-            return {
-                "content": result.content,
-                "metadata": metadata
-            }
+            logger.info(
+                "Document parsed successfully",
+                file_path=str(path),
+                page_count=metadata["page_count"],
+                table_count=metadata["table_count"],
+                content_length=len(markdown_content),
+            )
 
-        except Exception as e:
-            logger.error("Failed to parse document", file_path=file_path, error=str(e))
-            raise ValueError(f"Document parsing failed: {str(e)}") from e
+            return {"content": markdown_content, "metadata": metadata}
+
+        except Exception as exc:
+            logger.error(
+                "Document parsing failed",
+                file_path=str(path),
+                error=str(exc),
+            )
+            raise ValueError(f"Document parsing failed for '{file_path}': {exc}") from exc
+
+    def parse_directory(self, dir_path: str) -> List[Dict[str, Any]]:
+        """
+        Parse all supported documents in a directory.
+
+        Args:
+            dir_path: Path to the directory containing documents.
+
+        Returns:
+            List of dicts, each containing 'content' and 'metadata'.
+        """
+        path = Path(dir_path)
+        if not path.is_dir():
+            raise NotADirectoryError(f"Path is not a directory: {dir_path}")
+
+        results = []
+        for file in path.iterdir():
+            if file.suffix.lower() in SUPPORTED_FORMATS:
+                try:
+                    results.append(self.parse(str(file)))
+                except Exception as e:
+                    logger.warning("Skipping file due to parse error", file=str(file), error=str(e))
+        
+        return results

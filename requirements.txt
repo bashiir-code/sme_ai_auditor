@@ -1,30 +1,34 @@
 # --- Orchestration & Vector Database ---
-haystack-ai>=2.10.0           # Core RAG framework [cite: 5, 8]
-qdrant-client                 # High-performance vector storage [cite: 8]
+haystack-ai>=2.10.0           # Core RAG framework
+qdrant-client                 # High-performance vector storage 
+fastapi                       # Modern, fast web framework for the Pilot UI 
+uvicorn[standard]             # High-performance ASGI server 
+python-multipart              # Form data support for document uploads 
 
 # --- Inference & LLM SDKs ---
-mistralai                     # Official SDK for Mistral Large 2 [cite: 8]
+mistralai                     # Official SDK for Mistral Large 2 
 
 
 # --- Secure Document Parsing ---
-# CRITICAL: Version 2.15.0+ required to patch CVE-2026-24009 (RCE) [cite: 6, 41]
-docling>=2.15.0               # High-fidelity PDF/Table parsing [cite: 6, 41]
+# CRITICAL: Version 2.15.0+ required to patch CVE-2026-24009 (RCE) 
+docling>=2.15.0               # High-fidelity PDF/Table parsing 
 
 # --- Senior-Grade Logic & Validation ---
-pydantic>=2.10.0              # Strict data validation for compliance results [cite: 5, 43]
+pydantic>=2.10.0              # Strict data validation for compliance results 
 python-dotenv                 # Environment variable management
-structlog                     # Production-grade structured logging [cite: 10]
+structlog                     # Production-grade structured logging 
+cryptography                  # Secure AES-GCM local audit encryption 
 
 # --- Observability & Audit Trails ---
-langfuse                      # Trace AI reasoning and cost per audit [cite: 8, 48]
+langfuse                      # Trace AI reasoning and cost per audit 
 
 # --- Industrial Reporting (HTML/CSS to PDF) ---
-# Better than fpdf2 for complex regulatory layouts [cite: 9, 56]
-weasyprint                    # PDF engine with full CSS support [cite: 9, 57]
-jinja2                        # Logic-heavy report templating [cite: 9, 58]
-markdown                      # Content formatting [cite: 59]
+# Better than fpdf2 for complex regulatory layouts 
+weasyprint                    # PDF engine with full CSS support 
+jinja2                        # Logic-heavy report templating 
+markdown                      # Content formatting 
 
 # --- Testing Suite ---
-pytest                        # Standard testing framework [cite: 12]
-pytest-asyncio                # Required for Haystack 2.x async pipelines [cite: 12]
+pytest                        # Standard testing framework
+pytest-asyncio                # Required for Haystack 2.x async pipelines 
 pytest-mock                   # Mocking external legal APIs

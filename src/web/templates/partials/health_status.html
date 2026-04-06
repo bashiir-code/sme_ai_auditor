@@ -1,0 +1,37 @@
+<!-- Memory Health -->
+<div class="group flex items-center space-x-4 p-4 glass-dark rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all duration-500">
+    <div class="relative flex items-center justify-center">
+        <div class="w-2.5 h-2.5 rounded-full {% if qdrant_status == 'online' %}bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]{% else %}bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.4)]{% endif %} transition-colors duration-500"></div>
+        {% if qdrant_status == 'online' %}
+        <div class="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping opacity-20"></div>
+        {% endif %}
+    </div>
+    <div class="flex-grow min-w-0">
+        <span class="text-[11px] font-bold block uppercase tracking-wider text-slate-200 truncate">Memory Matrix</span>
+        <span class="text-[9px] text-slate-500 uppercase tracking-[0.15em] font-medium block truncate">Qdrant Vector Cluster</span>
+    </div>
+    <div class="flex flex-col items-end">
+        <span class="text-[9px] {% if qdrant_status == 'online' %}text-emerald-400{% else %}text-rose-400{% endif %} font-bold mono tracking-tighter">
+            {{ qdrant_status | upper }}
+        </span>
+    </div>
+</div>
+
+<!-- Reasoning Health -->
+<div class="group flex items-center space-x-4 p-4 glass-dark rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all duration-500">
+    <div class="relative flex items-center justify-center">
+        <div class="w-2.5 h-2.5 rounded-full {% if mistral_status == 'online' %}bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]{% else %}bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.4)]{% endif %} transition-colors duration-500"></div>
+        {% if mistral_status == 'online' %}
+        <div class="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping opacity-20"></div>
+        {% endif %}
+    </div>
+    <div class="flex-grow min-w-0">
+        <span class="text-[11px] font-bold block uppercase tracking-wider text-slate-200 truncate">Reasoning Brain</span>
+        <span class="text-[9px] text-slate-500 uppercase tracking-[0.15em] font-medium block truncate">Mistral Large v3</span>
+    </div>
+    <div class="flex flex-col items-end">
+        <span class="text-[9px] {% if mistral_status == 'online' %}text-emerald-400{% else %}text-rose-400{% endif %} font-bold mono tracking-tighter">
+            {{ mistral_status | upper }}
+        </span>
+    </div>
+</div>
