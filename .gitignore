@@ -43,6 +43,12 @@ pip-delete-this-directory.txt
 
 # Local data
 qdrant_data/
+qdrant_storage/
+qdrant_db/
+audits/
+reports/
+uploads/
+config/mcp_config.json
 
 # GitHub workflows
 # If you want to keep workflow logs or artifacts locally, do not ignore them here unless intentional

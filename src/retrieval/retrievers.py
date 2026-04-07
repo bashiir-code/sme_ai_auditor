@@ -12,7 +12,7 @@ from typing import List, Dict, Any, Optional
 
 from haystack import component, Document
 
-from src.vectordb.qdrant_client import QdrantClientWrapper
+from src.vectordb.qdrant_wrapper import QdrantClientWrapper
 
 logger = structlog.get_logger(__name__)
 

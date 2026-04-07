@@ -16,7 +16,7 @@ from typing import List, Dict, Any, Optional
 from src.parsers.docling_parser import DoclingParser
 from src.parsers.document_preprocessor import DocumentPreprocessor
 from src.vectordb.embedding_generator import EmbeddingGenerator
-from src.vectordb.qdrant_client import QdrantClientWrapper
+from src.vectordb.qdrant_wrapper import QdrantClientWrapper
 
 logger = structlog.get_logger(__name__)
 

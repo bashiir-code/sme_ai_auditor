@@ -14,7 +14,7 @@ from haystack import Pipeline, Document
 
 from src.retrieval.query_processor import QueryProcessor
 from src.retrieval.retrievers import QdrantRetriever
-from src.vectordb.qdrant_client import QdrantClientWrapper
+from src.vectordb.qdrant_wrapper import QdrantClientWrapper
 
 
 logger = structlog.get_logger(__name__)

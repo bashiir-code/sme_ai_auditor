@@ -1,6 +1,6 @@
 # The SME AI Auditor: Compliance-as-a-Service for the EU AI & Data Act (2026)
 
-![SME AI Auditor Architecture]![alt text](image.png)
+![SME AI Auditor Architecture](graph.png)
 
 ## 🚀 Project Overview
 
@@ -14,7 +14,8 @@ Our mission is to democratize AI compliance, making it accessible and manageable
 
 ## ✨ Key Features
 
-*   **Automated Compliance Audits**: Rapid analysis of AI technical specifications against EU regulations.
+*   **Web-based Pilot Deck Dashboard**: Real-time audit streaming via FastAPI + HTMX with Server-Sent Events.
+*   **Agentic MCP Toolbelt**: Goose/Qwen orchestrates audits via the Model Context Protocol, calling specialized tools atomically.
 *   **Risk Level Classification**: Categorization of AI systems into Prohibited, High-Risk, Limited Risk, or Minimal Risk based on the EU AI Act.
 *   **Legal Gap Detection**: Identification of specific non-compliance areas and actionable recommendations.
 *   **Structured Reporting**: Generation of professional, auditable PDF reports with detailed findings, evidence, and legal reasoning.
@@ -23,59 +24,60 @@ Our mission is to democratize AI compliance, making it accessible and manageable
 
 ## 🛠️ Sovereign Tech Stack (2026)
 
-Our technology stack is chosen to meet stringent requirements for data sovereignty, performance, and cost-effectiveness in the 2026 European context. The table below outlines the core components:
+Our technology stack is chosen to meet stringent requirements for data sovereignty, performance, and cost-effectiveness in the 2026 European context.
 
 | Component | Default Choice | Why it's the "Best" for Finland / SME AI Auditor |
 | :-------- | :------------- | :------------------------------------------------- |
-| **Orchestrator** | Haystack 2.x | German-engineered. Best for modular, production-ready legal pipelines. Provides robust RAG capabilities. |
-| **Vector DB** | Qdrant | Berlin-based. Optimized for EU data residency and complex metadata filtering. High-performance vector storage. |
-| **Inference Model (Auditor Brain)** | Mistral AI API (Mistral Small 3.1) | French-made. Top-tier reasoning for legal analysis, cost-efficient via API, maintaining EU sovereignty. [1] |
-| **Inference Model (Goose Brain)** | Qwen API (Qwen 2.5-Coder) | Optimized for agentic workflows and tool-calling via API, complementing Mistral for orchestration tasks. [2] |
-| **Document Parser** | Docling (IBM Research) | Exceptional at reading complex tables found in EU AI Act Annexes and technical specs. Critical for accurate ingestion. [3] |
-| **Serving Engine** | vLLM (for self-hosted models) | The industry standard for high-throughput, self-hosted model serving. (Note: API usage for Mistral/Qwen reduces local vLLM dependency for inference). |
+| **Web Interface** | FastAPI + HTMX | Lightweight Pilot Deck with SSE streaming and zero-JS-bloat reactivity. |
+| **Orchestrator** | Haystack 2.x | German-engineered. Best for modular, production-ready legal RAG pipelines. |
+| **Vector DB** | Qdrant | Berlin-based. Optimized for EU data residency and complex metadata filtering. |
+| **Inference Model (Auditor Brain)** | Mistral AI API (Mistral Large) | French-made. Top-tier reasoning for legal analysis, deterministic at temperature 0.1. |
+| **Inference Model (Goose Brain)** | Qwen (Qwen3-Coder) | Optimized for agentic workflows and tool-calling via API, orchestrating the audit pipeline. |
+| **Agentic Protocol** | FastMCP (MCP SDK) | Model Context Protocol server exposing atomic compliance tools to agent clients. |
+| **Document Parser** | Docling (IBM Research) | Exceptional at reading complex tables found in EU AI Act Annexes and technical specs. Critical for accurate ingestion. |
 | **Hosting** | Hetzner (Helsinki) | Keeps data physically on Finnish soil to satisfy Finnish GDPR/Trust standards. |
 | **Observability** | LangFuse | Open-source tracing to prove how the AI reached its legal conclusions, crucial for auditability. |
-| **Reporting** | WeasyPrint + Jinja2 | Industrial-grade HTML/MD to PDF conversion with professional templating for high-quality, customizable reports. [4] |
+| **Reporting** | WeasyPrint + Jinja2 | Industrial-grade HTML/MD to PDF conversion with professional templating. |
 
 ## ⚙️ Operational Workflow
 
-The SME AI Auditor operates through a refined multi-step process to ensure accurate and auditable compliance assessments:
+The SME AI Auditor has evolved into a robust web-based application, providing a modern "Pilot Deck" Dashboard powered by **FastAPI and HTMX**. Audit processes are streamed in real-time to the browser via **Server-Sent Events (SSE)** without requiring heavy SPA frameworks.
 
-1.  **Ingestion**: The user uploads technical specifications or 
-Y-tunnus information. **Docling** parses the text, meticulously preserving table structures, which is critical for accurate analysis of EU AI Act Annexes and technical documentation.
-
-2.  **Retrieval**: **Haystack 2.x** queries a **Qdrant** vector index, which contains the latest 2026 EU AI Office guidelines, the EU AI Act, the EU Data Act, and relevant CEN/CENELEC harmonized standards.
-
-3.  **Analysis (Mistral AI API)**: **Mistral Small 3.1** (via API) performs a multi-step reasoning task:
-    *   **Step 1: Classification**: Determines the AI system's risk level (Prohibited, High-Risk, Limited, Minimal) based on the EU AI Act, including a preliminary **Article 5 (Prohibited Practices) check**.
-    *   **Step 2: Requirement Mapping**: Identifies applicable Articles from the EU AI Act and EU Data Act, and relevant CEN/CENELEC harmonized standards.
-    *   **Step 3: Gap Detection**: Compares the SME's documentation against mapped requirements to identify specific legal "gaps." This step leverages the structured output from **Pydantic models** for robust and auditable findings.
-
-4.  **Orchestration (Qwen API via Goose)**: **Goose**, powered by **Qwen 2.5-Coder** (via API), orchestrates the entire workflow, including:
-    *   Managing data flow between components.
-    *   Automating compliance test suites.
-    *   Summarizing audit results.
-    *   Interacting with the **Model Context Protocol (MCP)** ecosystem for broader tool integration and regulatory database access.
-
-5.  **Reporting**: The system generates a structured report using **Pydantic models** for data validation. This data is then templated with **Jinja2** and converted into a professional, high-quality PDF using **WeasyPrint** for the client.
-
-6.  **Observability**: **LangFuse** provides end-to-end tracing of the AI's decision-making process, proving how it reached its legal conclusions and ensuring full auditability.
+1.  **Interaction (Pilot Deck UI)**: The user uploads technical documentation via the HTMX-powered dashboard. The web interface establishes a persistent SSE connection with the `src/web/app.py` stream endpoint.
+2.  **Orchestration (FastMCP + Agents)**: The core system is anchored by a two-brain agent architecture:
+    *   **Goose (Qwen3-Coder)** acts as the autonomous workflow orchestrator, utilizing our **FastMCP Server** (`src/interfaces/mcp_server.py`). The server exposes backend tools (data ingestion, vector search, dual-act audit), enabling agentic hand-off for subtasks.
+    *   **Mistral AI (Mistral Large)** handles the heavy legal reasoning via structured JSON output with Pydantic validation.
+3.  **Ingestion & Memory**: **Docling** parses the provided physical documents locally. The extracted text is vectorized using **Qdrant**, serving as the system's memory. Memory management processes actively clean and bound system state via Python garbage collection to optimize for 16GB environments.
+4.  **Analysis**: The pipeline executes deterministic compliance checks: classifying risk, detecting gaps against CEN/CENELEC standards, and scanning against the EU AI/Data Acts.
+5.  **Offline State Preservation**: `AuditSessionManager` explicitly serializes ongoing audit states to disk via JSON, guaranteeing process continuation even if the interface disconnects.
+6.  **Reporting & Tracing**: All analysis steps output structured **Pydantic** objects which populate a polished **WeasyPrint** + HTML/Jinja2 audit PDF. End-to-end tracing is embedded locally via LangFuse, proving the reasoning behind every requirement gap.
 
 ## 🧠 Dual-Model AI Strategy
 
 Our approach leverages a dual-model AI strategy to maximize efficiency and accuracy:
 
-*   **Mistral Small 3.1 (API)**: Serves as the primary "Auditor Brain" for nuanced **legal reasoning** and compliance analysis. Its strong performance in understanding complex legal texts makes it ideal for classification, requirement mapping, and gap detection against the EU AI Act and Data Act.
-*   **Qwen 2.5-Coder (API)**: Acts as the "Goose Brain" for **agentic workflows** and **orchestration**. Its superior tool-calling capabilities and proficiency in handling multi-step tasks enable Goose to efficiently manage the overall audit process, interact with external tools, and automate compliance tasks.
+*   **Mistral Large (API)**: Serves as the primary "Auditor Brain" for nuanced **legal reasoning** and compliance analysis. Its strong performance in understanding complex legal texts makes it ideal for classification, requirement mapping, and gap detection against the EU AI Act and Data Act. Temperature is locked at `0.1` for deterministic legal assessment.
+*   **Qwen3-Coder (API)**: Acts as the "Goose Brain" for **agentic workflows** and **orchestration**. Its superior tool-calling capabilities and proficiency in handling multi-step tasks enable Goose to efficiently manage the overall audit process, interact with MCP tools, and automate compliance tasks.
 
 This separation of concerns ensures that each model is utilized for its optimal strength, leading to a more robust and reliable "Compliance-as-a-Service" solution.
 
+## 🔌 MCP Agentic Interface
+
+The FastMCP server (`src/interfaces/mcp_server.py`) exposes the following atomic tools for Goose and other MCP-compatible agents:
+
+| Tool | Description | Privacy Guard |
+| :--- | :---------- | :------------ |
+| `heartbeat` | Pre-flight check — verifies Qdrant Memory Matrix is online. | N/A |
+| `ingest_sme_evidence` | Parses SME documents via Docling. | Returns metadata receipt only — no raw text leaked to agent. |
+| `perform_dual_act_audit` | Atomic AI Act + Data Act compliance analysis. | Uses `local_audit_id` for session isolation. |
+| `ask_legal_reference` | Direct Qdrant search for Article citations. | Returns legal text for transparency "Why" questions. |
+
 ## 💡 Senior Implementation Pro-Tips (2026)
 
-*   **Security Patching**: Always ensure `docling` is pinned to a patched release (`2.15.0+`) to mitigate known vulnerabilities like `CVE-2026-24009` (RCE vulnerability) [3].
-*   **Structured Output**: Utilize **Pydantic models** (as defined in `src/models.py`) for all AI outputs. This ensures strict data validation, type safety, and prevents downstream reporting errors, making the system more robust and auditable.
+*   **Security Patching**: Always ensure `docling` is pinned to a patched release (`2.84.0+`) to mitigate known vulnerabilities like `CVE-2026-24009` (RCE vulnerability).
+*   **Structured Output**: Utilize **Pydantic models** (as defined in `src/analysis/schemas.py`) for all AI outputs. This ensures strict data validation, type safety, and prevents downstream reporting errors, making the system more robust and auditable.
 *   **Observability**: Implement **LangFuse `@observe()` decorators** around critical functions (e.g., `DoclingParser` and `DataActChecker` calls) to track the "cost per audit," performance metrics, and the AI's reasoning steps. This is vital for auditability and continuous optimization.
-*   **Report Quality**: Replace basic PDF generation with **WeasyPrint** and **Jinja2**. This combination allows for highly customizable, professional-grade PDF reports with complex layouts, dynamic content, and branding, crucial for client-facing deliverables [4].
+*   **Report Quality**: Replace basic PDF generation with **WeasyPrint** and **Jinja2**. This combination allows for highly customizable, professional-grade PDF reports with complex layouts, dynamic content, and branding, crucial for client-facing deliverables.
 
 ## 💻 Setup & Installation
 
@@ -84,8 +86,9 @@ This project is designed for an **Ubuntu laptop with 16GB of RAM**, leveraging A
 ### Prerequisites
 
 *   Ubuntu Operating System
-*   Python 3.9+ (recommended)
+*   Python 3.12+
 *   `curl` (for `uv` installation)
+*   Docker (for Qdrant)
 
 ### 1. Install `uv`
 
@@ -99,95 +102,90 @@ source $HOME/.cargo/env # Ensure uv is available in your current session
 ### 2. Clone the Repository
 
 ```bash
-git clone https://github.com/your-repo/sme_ai_auditor.git # Replace with your actual repo URL
+git clone https://github.com/<your-org-or-username>/sme_ai_auditor.git
 cd sme_ai_auditor
 ```
 
 ### 3. Setup AI Companions & Environment
 
-Run the `uv`-optimized setup script. This script will create a virtual environment, install project dependencies, and configure Aider and Goose.
+Run the setup script. This script will create a virtual environment, install project dependencies, and configure Aider and Goose.
 
 ```bash
-chmod +x setup_ai_companions_uv.sh
-./setup_ai_companions_uv.sh
+chmod +x setup_ai_companions.sh
+./setup_ai_companions.sh
 ```
 
 ### 4. Configure Environment Variables
 
-Copy the provided `.env.template_api` to `.env` and fill in your API keys for Mistral AI and Qwen. You will need to obtain these from their respective providers.
-
-```bash
-cp .env.template_api .env
-nano .env # Edit this file with your actual API keys
-```
-
-**Example `.env` configuration:**
+Create a `.env` file in the project root with the following keys:
 
 ```dotenv
-# SME AI Auditor - Sovereign Tech Stack Configuration (Mistral AI API Optimized)
+# --- SME AI Auditor: Sovereign Tech Stack Configuration ---
 
-# 1. Inference Model (Mistral AI API)
+# 1. Inference Engine
+MODEL_NAME=mistral-large-2512
 MISTRAL_API_KEY=sk-your_mistral_api_key_here
-MODEL_NAME=mistral/mistral-small-latest
 
-# 2. Qwen API Configuration for Goose
-QWEN_API_KEY=sk-your_qwen_api_key_here
-GOOSE_MODEL=qwen/qwen-2.5-coder
-
-# 3. Vector Database (Qdrant - Berlin-based)
+# 2. Vector DB (Berlin-Sovereign)
 QDRANT_URL=http://localhost:6333
-QDRANT_API_KEY=your_qdrant_api_key_here
 QDRANT_COLLECTION_NAME=sme_ai_auditor_compliance
 
-# 4. Document Parser (Docling - IBM Research)
-DOCLING_ENDPOINT=http://localhost:8080 # Or your Docling service endpoint
+# 3. Document Parser (Secure & Lean)
+DOCLING_PDF_BACKEND=pypdfium2
+DOCLING_NUM_THREADS=1
 
-# 5. Observability (LangFuse - Open-source)
-LANGFUSE_PUBLIC_KEY=your_langfuse_public_key_here
-LANGFUSE_SECRET_KEY=your_langfuse_secret_key_here
-LANGFUSE_HOST=https://cloud.langfuse.com
+# 4. Networking
+PORT=9000
 
-# 6. Hosting (Hetzner Helsinki) - Placeholder for deployment
-HETZNER_REGION=hel1
+# 5. Observability (Auditability Requirement)
+LANGFUSE_SECRET_KEY=REDACTED_LANGFUSE_KEY_key_here
+LANGFUSE_PUBLIC_KEY=REDACTED_LANGFUSE_PUBLIC_key_here
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
 
-# 7. AI Companion Configurations
-AIDER_MODEL=mistral/mistral-small-latest
-AIDER_GIT_COMMIT=true
-GOOSE_MCP_SERVER_URL=http://localhost:3000 # Or your MCP server endpoint
+# 6. AI Companions
+AIDER_MODEL=mistral/devstral-2512
+GOOSE_MODEL=qwen/qwen3-coder
+GOOSE_MCP_SERVER_URL=http://localhost:9000/mcp
 ```
 
-### 5. Activate Virtual Environment
+### 5. Start Qdrant (Docker)
 
-Before running any project commands, activate your virtual environment:
+```bash
+docker run -d -p 6333:6333 -p 6334:6334 \
+    -v $(pwd)/qdrant_storage:/qdrant/storage \
+    qdrant/qdrant
+```
+
+### 6. Activate Virtual Environment
 
 ```bash
 source .venv/bin/activate
 ```
 
-### 6. Install Project Dependencies (if not already done by setup script)
+### 7. Install Project Dependencies (if not already done by setup script)
 
 ```bash
 uv pip install -r requirements.txt
 ```
 
-## 🚀 Usage
+## 🚀 Usage (Local Development)
 
-### Running Aider (Coding Companion)
+### Running the Web Dashboard
 
-Ensure your virtual environment is active and `MISTRAL_API_KEY` is exported. Then, run Aider from your project root:
+The project features a fully integrated Web Compliance Pilot. Start the server using Uvicorn:
 
 ```bash
-export MISTRAL_API_KEY=sk-your_mistral_api_key_here # If not in .env or not loaded
-aider
+uvicorn src.web.app:app --host 0.0.0.0 --port 9000 --reload
 ```
 
-### Running Goose (Workflow Orchestrator)
+Navigate to `http://localhost:9000/` in your browser. From here, you can upload compliance documents via the HTMX interface and monitor the streaming audit.
 
-Ensure your virtual environment is active and `QWEN_API_KEY` is exported. Then, run Goose:
+### Goose (Agentic Orchestrator)
+
+Goose connects to the MCP server endpoint at `/mcp` to call compliance tools:
 
 ```bash
-export QWEN_API_KEY=sk-your_qwen_api_key_here # If not in .env or not loaded
-goose session --prompt "Run compliance audit for SME X, summarize findings."
+goose session --prompt "Analyze the docs in ./uploads/biometric_firm and identify compliance gaps."
 ```
 
 ## 📂 Project Structure
@@ -200,25 +198,31 @@ sme_ai_auditor/
 ├── SETUP.md              ← Installation guide
 ├── README.md             ← Project overview (this file)
 ├── requirements.txt      ← Python dependencies (managed by uv)
-├── .env.template         ← Config template (deprecated, use .env.template_api)
-├── .env.template_api     ← API-optimized config template
+├── pyproject.toml        ← Project metadata & build config
 ├── verify_setup.py       ← Setup checker
-├── setup_ai_companions_uv.sh ← uv-optimized setup script
+├── setup_ai_companions.sh← Setup script (uv + Aider + Goose)
 │
-├── config/               ← Configuration files (e.g., haystack_pipeline.yaml)
+├── config/               ← Configuration files
+│   ├── haystack_pipeline.yaml
+│   ├── qdrant_config.yaml
+│   └── docling_config.yaml
 ├── data/                 ← Regulatory PDFs (EU AI Act, Data Act, CEN/CENELEC standards)
 │   ├── cen_cenelec_standards/
 │   ├── eu_ai_act/
 │   ├── eu_data_act/
 │   └── sme_docs_examples/
 ├── src/                  ← Source code
+│   ├── core/             # AuditorOrchestrator (Executive Function)
 │   ├── parsers/          # Docling integration
-│   ├── vectordb/         # Qdrant client
-│   ├── retrieval/        # Haystack components
-│   ├── analysis/         # Mistral-powered legal reasoning, Pydantic models
+│   ├── vectordb/         # Qdrant client & IndexManager
+│   ├── retrieval/        # Haystack 2.x RAG pipeline
+│   ├── analysis/         # Mistral-powered legal reasoning, Pydantic schemas
+│   ├── interfaces/       # FastMCP server (Goose/Agent toolbelt)
+│   ├── web/              # FastAPI + HTMX Pilot Deck
 │   ├── observability/    # LangFuse integration
 │   └── reporting/        # WeasyPrint/Jinja2 for PDF generation
 ├── reports/              ← Generated PDF compliance reports
+├── uploads/              ← Uploaded SME documents & session state
 └── tests/                ← Unit, integration, and compliance tests
     ├── unit/
     ├── integration/
@@ -247,7 +251,7 @@ cd sme_ai_auditor
 git checkout -b feature/<short-description>
 ```
 
-4. Install dependencies and configure your local `.env` file using `.env.template_api`.
+4. Install dependencies and configure your local `.env` file.
 5. Open a pull request against `main` and request a review.
 6. GitHub Actions will run the test workflow defined in `.github/workflows/python-app.yml`.
 
@@ -265,4 +269,3 @@ This project is licensed under the [MIT License](LICENSE.md) (to be created).
 [4] WeasyPrint. (n.d.). *Documentation*. Retrieved from https://weasyprint.org/docs/
 [5] DeepInfra. (2026, February 2). *Qwen API Pricing Guide 2026: Max Performance on a Budget*. Retrieved from https://deepinfra.com/blog/qwen-api-pricing-2026-guide
 [6] Qwen AI. (2024, September 18). *Qwen2.5: A Party of Foundation Models!*. Retrieved from https://qwen.ai/blog?id=qwen2.5
-# sme_ai_auditor

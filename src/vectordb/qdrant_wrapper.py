@@ -40,11 +40,18 @@ class QdrantClientWrapper:
         self.api_key = api_key or os.getenv("QDRANT_API_KEY")
         self.collection_name = collection_name or os.getenv("QDRANT_COLLECTION_NAME", "sme_ai_auditor_compliance")
 
-        # In a real environment with api_key, we would pass it. 
-        # For local Docker default, it might be None.
-        client_kwargs = {"url": self.url}
-        if self.api_key:
-            client_kwargs["api_key"] = self.api_key
+        # Support in-memory or persistent local storage if specified
+        client_kwargs = {}
+        if self.url == ":memory:":
+            client_kwargs["location"] = ":memory:"
+            logger.info("Initializing in-memory QdrantClient")
+        elif self.url.startswith("/") or self.url.startswith("./"):
+            client_kwargs["path"] = self.url
+            logger.info("Initializing persistent local QdrantClient", path=self.url)
+        else:
+            client_kwargs["url"] = self.url
+            if self.api_key:
+                client_kwargs["api_key"] = self.api_key
 
         try:
             self._client = QdrantClient(**client_kwargs)
@@ -165,13 +172,13 @@ class QdrantClientWrapper:
 
         logger.debug("Searching Qdrant", top_k=top_k, filters=filters)
         try:
-            results = self._client.search(
+            results = self._client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_vector,
+                query=query_vector,
                 query_filter=qdrant_filter,
                 limit=top_k
             )
-            return results
+            return results.points
         except Exception as e:
             logger.error("Qdrant search failed", error=str(e))
             raise RuntimeError(f"Failed to search Qdrant: {e}") from e

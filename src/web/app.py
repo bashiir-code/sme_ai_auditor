@@ -19,13 +19,17 @@ from typing import List, Dict
 import structlog
 
 from src.core.orchestrator import AuditorOrchestrator
-from src.vectordb.qdrant_client import QdrantClientWrapper
+from src.vectordb.qdrant_wrapper import QdrantClientWrapper
 from src.web.audit_store import AuditSessionManager
+from src.interfaces.mcp_server import mcp
 from mistralai.client.sdk import Mistral
 
 logger = structlog.get_logger(__name__)
 
 app = FastAPI(title="SME AI Auditor - Compliance Pilot")
+
+# Mount MCP Server (SSE Transport)
+app.mount("/mcp", mcp.sse_app)
 
 # Ensure required directories exist
 os.makedirs("reports", exist_ok=True)
@@ -94,9 +98,11 @@ async def stream_audit_endpoint(audit_id: str):
     """
     params = session_manager.get_session(audit_id)
     if not params:
-        async def error_gen():
-            yield f"data: <div class='mb-2 p-3 bg-red-950/20 border-l-4 border-red-600 font-mono text-sm text-red-400 animate-pulse'>🔴 Error: Pilot Session Expired. Re-run Audit.</div>\n\n"
-        return StreamingResponse(error_gen(), media_type="text/event-stream")
+        from fastapi import Response
+        # Return 204 No Content. This natively instructs the browser's EventSource
+        # to stop attempting to reconnect after the stream completes and the 
+        # session is deleted in the finally block.
+        return Response(status_code=204)
 
     async def event_generator():
         try:

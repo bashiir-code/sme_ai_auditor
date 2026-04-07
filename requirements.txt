@@ -4,6 +4,8 @@ qdrant-client                 # High-performance vector storage
 fastapi                       # Modern, fast web framework for the Pilot UI 
 uvicorn[standard]             # High-performance ASGI server 
 python-multipart              # Form data support for document uploads 
+mcp                           # Model Context Protocol SDK for agentic tools
+sse-starlette                 # SSE transport for MCP server 
 
 # --- Inference & LLM SDKs ---
 mistralai                     # Official SDK for Mistral Large 2 
@@ -11,7 +13,7 @@ mistralai                     # Official SDK for Mistral Large 2
 
 # --- Secure Document Parsing ---
 # CRITICAL: Version 2.15.0+ required to patch CVE-2026-24009 (RCE) 
-docling>=2.15.0               # High-fidelity PDF/Table parsing 
+docling>=2.84.0               # High-fidelity PDF/Table parsing (CVE-2026-24009 patched)
 
 # --- Senior-Grade Logic & Validation ---
 pydantic>=2.10.0              # Strict data validation for compliance results 

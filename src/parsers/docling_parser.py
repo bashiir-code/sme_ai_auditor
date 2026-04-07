@@ -20,7 +20,7 @@ from langfuse import observe
 logger = structlog.get_logger(__name__)
 
 # Supported input formats
-SUPPORTED_FORMATS = {".pdf", ".docx"}
+SUPPORTED_FORMATS = {".pdf", ".docx", ".md", ".txt"}
 
 
 class DoclingParser:

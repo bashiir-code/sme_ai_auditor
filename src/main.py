@@ -19,7 +19,7 @@ from langfuse import observe
 from mistralai.client.sdk import Mistral
 
 from src.parsers.docling_parser import DoclingParser
-from src.vectordb.qdrant_client import QdrantClientWrapper
+from src.vectordb.qdrant_wrapper import QdrantClientWrapper
 from src.vectordb.index_manager import IndexManager
 from src.retrieval.haystack_pipeline_builder import DocumentRetrievalPipeline
 from src.analysis.ai_act_classifier import AIActClassifier
