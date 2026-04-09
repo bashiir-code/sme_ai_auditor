@@ -258,10 +258,10 @@ class TestEmbeddingGeneratorFailFast:
 # QdrantClientWrapper — initialisation and collection management
 # ---------------------------------------------------------------------------
 
-from src.vectordb.qdrant_client import QdrantClientWrapper
+from src.vectordb.qdrant_wrapper import QdrantClientWrapper
 
 class TestQdrantClientWrapper:
-    @patch("src.vectordb.qdrant_client.QdrantClient")
+    @patch("src.vectordb.qdrant_wrapper.QdrantClient")
     def test_init_success(self, mock_qdrant_cls):
         client = QdrantClientWrapper(url="http://fake:6333", collection_name="test_col")
         assert client is not None
@@ -269,13 +269,13 @@ class TestQdrantClientWrapper:
         assert client.collection_name == "test_col"
         mock_qdrant_cls.assert_called_once()
 
-    @patch("src.vectordb.qdrant_client.QdrantClient")
+    @patch("src.vectordb.qdrant_wrapper.QdrantClient")
     def test_init_connection_error(self, mock_qdrant_cls):
         mock_qdrant_cls.side_effect = Exception("Network down")
         with pytest.raises(ConnectionError, match="Could not connect to Qdrant"):
             QdrantClientWrapper()
 
-    @patch("src.vectordb.qdrant_client.QdrantClient")
+    @patch("src.vectordb.qdrant_wrapper.QdrantClient")
     def test_create_collection_if_not_exists_creates_when_missing(self, mock_qdrant_cls):
         mock_client_instance = MagicMock()
         mock_client_instance.collection_exists.return_value = False
@@ -290,7 +290,7 @@ class TestQdrantClientWrapper:
         assert kwargs["collection_name"] == client.collection_name
         assert kwargs["vectors_config"].size == 1024
 
-    @patch("src.vectordb.qdrant_client.QdrantClient")
+    @patch("src.vectordb.qdrant_wrapper.QdrantClient")
     def test_create_collection_skips_if_exists(self, mock_qdrant_cls):
         mock_client_instance = MagicMock()
         mock_client_instance.collection_exists.return_value = True
@@ -301,7 +301,7 @@ class TestQdrantClientWrapper:
 
         mock_client_instance.create_collection.assert_not_called()
 
-    @patch("src.vectordb.qdrant_client.QdrantClient")
+    @patch("src.vectordb.qdrant_wrapper.QdrantClient")
     def test_upsert_mismatch_raises_value_error(self, mock_qdrant_cls):
         client = QdrantClientWrapper()
         chunks = [{"text": "one"}, {"text": "two"}]
@@ -310,7 +310,7 @@ class TestQdrantClientWrapper:
         with pytest.raises(ValueError, match="Mismatch in counts"):
             client.upsert(chunks, vectors)
 
-    @patch("src.vectordb.qdrant_client.QdrantClient")
+    @patch("src.vectordb.qdrant_wrapper.QdrantClient")
     def test_upsert_empty_skips(self, mock_qdrant_cls):
         mock_client_instance = MagicMock()
         mock_qdrant_cls.return_value = mock_client_instance
@@ -320,7 +320,7 @@ class TestQdrantClientWrapper:
         
         mock_client_instance.upsert.assert_not_called()
 
-    @patch("src.vectordb.qdrant_client.QdrantClient")
+    @patch("src.vectordb.qdrant_wrapper.QdrantClient")
     def test_upsert_success(self, mock_qdrant_cls):
         mock_client_instance = MagicMock()
         mock_qdrant_cls.return_value = mock_client_instance
@@ -341,7 +341,7 @@ class TestQdrantClientWrapper:
         assert point.payload["text"] == "chunk one"
         assert point.payload["source"] == "doc1"
 
-    @patch("src.vectordb.qdrant_client.QdrantClient")
+    @patch("src.vectordb.qdrant_wrapper.QdrantClient")
     def test_search_no_filters(self, mock_qdrant_cls):
         mock_client_instance = MagicMock()
         mock_client_instance.search.return_value = ["mock_result_1", "mock_result_2"]
@@ -355,7 +355,7 @@ class TestQdrantClientWrapper:
         args, kwargs = mock_client_instance.search.call_args
         assert kwargs["query_filter"] is None
 
-    @patch("src.vectordb.qdrant_client.QdrantClient")
+    @patch("src.vectordb.qdrant_wrapper.QdrantClient")
     def test_search_with_filters(self, mock_qdrant_cls):
         mock_client_instance = MagicMock()
         mock_qdrant_cls.return_value = mock_client_instance

@@ -67,7 +67,7 @@ class TestDoclingParserGuards:
         bad_file = tmp_path / "doc.txt"
         bad_file.write_text("some content")
         parser = DoclingParser()
-        with pytest.raises(ValueError, match="Unsupported format"):
+        with pytest.raises(ValueError, match="Extension .* not allowed"):
             parser.parse(str(bad_file))
 
     @pytest.mark.parametrize("ext", [".pdf", ".docx"])

@@ -89,7 +89,7 @@ class TestMarkdownGenerator:
                 content = f.read()
                 
             # Formatting checks
-            assert "# SME AI Auditor - Official Compliance Report" in content
+            assert "# EU AI Act & Data Act Compliance Assessment Report" in content
             assert "Smart Filter" in content
             assert "🟥 **BLOCKED (DO NOT DEPLOY)**" in content
             assert "Limited Risk" in content

@@ -3,7 +3,7 @@ import os
 from src.parsers.docling_parser import DoclingParser
 from src.analysis.ai_act_classifier import AIActClassifier
 from src.analysis.schemas import RiskCategory
-from langfuse.decorators import langfuse_context
+
 
 def test_evidence_pack_prohibition_check():
     # 1. Setup paths
@@ -24,6 +24,3 @@ def test_evidence_pack_prohibition_check():
     # The evidence pack explicitly mentions Biometric ID in the matrix
     assert report.risk_level == RiskCategory.PROHIBITED
     assert any("Biometric" in finding.evidence for finding in report.findings)
-
-    # 5. Ensure trace is sent to Langfuse
-    langfuse_context.flush()
