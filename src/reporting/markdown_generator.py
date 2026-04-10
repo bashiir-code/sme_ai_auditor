@@ -8,8 +8,7 @@ them into a professional, human-readable Markdown report for the SME.
 import os
 from datetime import datetime, timezone
 import structlog
-from typing import Dict, Any
-
+from typing import Dict, Any, Optional
 from src.analysis.schemas import AIActAuditReport, RemediationPlan
 
 logger = structlog.get_logger(__name__)
@@ -32,6 +31,8 @@ class MarkdownGenerator:
         ai_act_report: AIActAuditReport,
         data_act_data: Dict[str, Any],
         gap_plan: RemediationPlan,
+        claude_ai_act: Optional[AIActAuditReport] = None,
+        claude_data_act: Optional[Dict[str, Any]] = None,
         trace_id: str = None,
         filename: str = "compliance_report.md"
     ) -> str:
@@ -148,6 +149,36 @@ class MarkdownGenerator:
             report.append("")
             report.append(f"> {data_act_data.get('summary')}")
             report.append("")
+
+        # ── SECTION 2b: CLAUDE PARALLEL PERSPECTIVE ─────────────────────────
+        if claude_ai_act or claude_data_act:
+            report.append("---")
+            report.append("")
+            report.append("## Section 2b: Claude (OpenRouter) Parallel Perspective")
+            report.append("")
+            report.append(
+                "> This section provides a second opinion from Claude 3.5 Sonnet "
+                "to ensure regulatory robustness through dual-model validation."
+            )
+            report.append("")
+
+            if claude_ai_act:
+                report.append(f"**Claude Risk Tier:** `{claude_ai_act.risk_level.value.upper()}`")
+                report.append("")
+                report.append("**Claude's Executive Summary:**")
+                report.append(f"> {claude_ai_act.summary}")
+                report.append("")
+
+            if claude_data_act:
+                report.append("**Claude's Data Act Evaluation:**")
+                report.append(f"| Obligation | Status |")
+                report.append("|---|---|")
+                report.append(f"| Data Provider | {'Yes' if claude_data_act.get('is_data_provider') else 'No'} |")
+                report.append(f"| Ready | {'Yes' if claude_data_act.get('data_sharing_compliant') else 'No'} |")
+                report.append("")
+                report.append(f"> {claude_data_act.get('summary')}")
+                report.append("")
+
 
         # ── SECTION 3: REMEDIATION PLAN ─────────────────────────────────────
         report.append("---")

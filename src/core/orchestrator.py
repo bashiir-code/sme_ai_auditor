@@ -18,7 +18,9 @@ from src.vectordb.qdrant_wrapper import QdrantClientWrapper
 from src.vectordb.index_manager import IndexManager
 from src.retrieval.haystack_pipeline_builder import DocumentRetrievalPipeline
 from src.analysis.ai_act_classifier import AIActClassifier
+from src.analysis.claude_classifier import ClaudeClassifier
 from src.analysis.data_act_checker import DataActChecker
+from src.analysis.claude_checker import ClaudeDataChecker
 from src.analysis.requirement_mapper import RequirementMapper
 from src.analysis.gap_detector import GapDetector
 from src.reporting.markdown_generator import MarkdownGenerator
@@ -98,23 +100,43 @@ class AuditorOrchestrator:
         )
         yield self._fmt_status(f"Retrieved {len(ai_act_documents)} relevant legal provisions.", "success")
 
-        # ---------------------------------------------------------
-        # Phase 3: Reasoning
-        # ---------------------------------------------------------
+        # --- Mistral Reasoning ---
         yield self._fmt_status("Engaging Mistral 'Brain' for AI Act Classification...", "info")
         ai_classifier = AIActClassifier()
         ai_act_report = ai_classifier.analyze_system(
             system_description=extracted_sme_text, 
             context_docs=ai_act_documents
         )
-        yield self._fmt_status(f"Risk Tier Identified: <b>{ai_act_report.risk_level.value}</b>", "success")
+        yield self._fmt_status(f"Mistral Risk Tier: <b>{ai_act_report.risk_level.value}</b>", "success")
 
-        yield self._fmt_status("Evaluating Data Act Obligations...", "info")
+        # --- Claude Reasoning ---
+        yield self._fmt_status("Engaging Claude 'Brain' (OpenRouter) for parallel analysis...", "info")
+        claude_classifier = ClaudeClassifier()
+        try:
+            claude_ai_act_report = claude_classifier.analyze_system(
+                system_description=extracted_sme_text, 
+                context_docs=ai_act_documents
+            )
+            yield self._fmt_status(f"Claude Risk Tier: <b>{claude_ai_act_report.risk_level.value}</b>", "success")
+        except Exception as e:
+            yield self._fmt_status(f"Claude Reasoning Warning: {e}", "warning")
+            claude_ai_act_report = None
+
+        yield self._fmt_status("Evaluating Data Act Obligations (Dual-Model)...", "info")
         data_checker = DataActChecker(pipeline=pipeline)
         data_act_report = data_checker.evaluate_data_obligations(
             system_description=extracted_sme_text
         )
-        yield self._fmt_status("Data Act Analysis Complete.", "success")
+        
+        claude_data_checker = ClaudeDataChecker(pipeline=pipeline)
+        try:
+            claude_data_act_report = claude_data_checker.evaluate_data_obligations(
+                system_description=extracted_sme_text
+            )
+            yield self._fmt_status("Claude Data Act Analysis Complete.", "success")
+        except Exception as e:
+            yield self._fmt_status(f"Claude Data Act Warning: {e}", "warning")
+            claude_data_act_report = None
 
         del pipeline
         gc.collect()
@@ -150,6 +172,8 @@ class AuditorOrchestrator:
             ai_act_report=ai_act_report,
             data_act_data=data_act_report,
             gap_plan=remediation_plan,
+            claude_ai_act=claude_ai_act_report,
+            claude_data_act=claude_data_act_report,
             trace_id=audit_trace_id,
             filename=f"{base_filename}.md"
         )
