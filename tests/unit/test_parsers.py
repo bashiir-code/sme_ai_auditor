@@ -64,10 +64,10 @@ class TestDoclingParserGuards:
 
     def test_raises_value_error_for_unsupported_format(self, tmp_path):
         """Unsupported extensions must raise ValueError."""
-        bad_file = tmp_path / "doc.txt"
+        bad_file = tmp_path / "doc.exe"
         bad_file.write_text("some content")
         parser = DoclingParser()
-        with pytest.raises(ValueError, match="Extension .* not allowed"):
+        with pytest.raises(ValueError, match="Unsupported format"):
             parser.parse(str(bad_file))
 
     @pytest.mark.parametrize("ext", [".pdf", ".docx"])

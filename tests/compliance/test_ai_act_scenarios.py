@@ -4,6 +4,12 @@ from src.parsers.docling_parser import DoclingParser
 from src.analysis.ai_act_classifier import AIActClassifier
 from src.analysis.schemas import RiskCategory
 
+# Live test: calls the real Mistral API, so it is skipped when no key is set (e.g. in CI).
+pytestmark = pytest.mark.skipif(
+    not os.getenv("MISTRAL_API_KEY"),
+    reason="live Mistral API test; set MISTRAL_API_KEY to run",
+)
+
 
 def test_evidence_pack_prohibition_check():
     # 1. Setup paths

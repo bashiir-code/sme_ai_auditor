@@ -344,15 +344,15 @@ class TestQdrantClientWrapper:
     @patch("src.vectordb.qdrant_wrapper.QdrantClient")
     def test_search_no_filters(self, mock_qdrant_cls):
         mock_client_instance = MagicMock()
-        mock_client_instance.search.return_value = ["mock_result_1", "mock_result_2"]
+        mock_client_instance.query_points.return_value.points = ["mock_result_1", "mock_result_2"]
         mock_qdrant_cls.return_value = mock_client_instance
         
         client = QdrantClientWrapper()
         results = client.search(query_vector=[0.1]*1024, top_k=2)
         
         assert len(results) == 2
-        mock_client_instance.search.assert_called_once()
-        args, kwargs = mock_client_instance.search.call_args
+        mock_client_instance.query_points.assert_called_once()
+        args, kwargs = mock_client_instance.query_points.call_args
         assert kwargs["query_filter"] is None
 
     @patch("src.vectordb.qdrant_wrapper.QdrantClient")
@@ -363,8 +363,8 @@ class TestQdrantClientWrapper:
         client = QdrantClientWrapper()
         client.search(query_vector=[0.1]*1024, top_k=2, filters={"article_number": "10"})
         
-        mock_client_instance.search.assert_called_once()
-        args, kwargs = mock_client_instance.search.call_args
+        mock_client_instance.query_points.assert_called_once()
+        args, kwargs = mock_client_instance.query_points.call_args
         query_filter = kwargs["query_filter"]
         
         assert query_filter is not None
