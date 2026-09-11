@@ -25,7 +25,9 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Environment variables
-# .env files are allowed to be committed as per user request for private repo collaboration
+.env
+.env.*
+!.env.example
 
 # IDEs and editors
 .vscode/

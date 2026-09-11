@@ -42,6 +42,7 @@ def chat_with_claude(api_key):
             print(f"\n❌ An error occurred: {e}")
 
 if __name__ == "__main__":
-    # Pulling the key directly from the one you provided
-    key = "REDACTED_OPENROUTER_KEY"
+    key = os.environ.get("OPENROUTER_API_KEY")
+    if not key:
+        sys.exit("Set OPENROUTER_API_KEY (see .env.example)")
     chat_with_claude(key)
