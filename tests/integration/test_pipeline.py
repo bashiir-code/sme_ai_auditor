@@ -30,6 +30,7 @@ class TestEndToEndPipeline:
         mock_mistral.assert_called_once_with(api_key="fake-key")
         mock_qdrant.assert_called_once()
 
+    @patch("src.main.LocalAuditLogger")
     @patch("src.main.verify_infrastructure")
     @patch("src.main.IndexManager")
     @patch("src.main.DoclingParser")
@@ -44,7 +45,7 @@ class TestEndToEndPipeline:
         self, 
         mock_pdf, mock_md, mock_detector, mock_mapper, 
         mock_data_checker, mock_ai_classifier, 
-        mock_retrieval, mock_docling, mock_index_mgr, mock_verify
+        mock_retrieval, mock_docling, mock_index_mgr, mock_verify, mock_audit_logger
     ):
         # 1. Setup Mocks
         mock_retriever_instance = MagicMock()
@@ -90,7 +91,7 @@ class TestEndToEndPipeline:
         mock_retriever_instance.run_query.assert_called_once_with(
             query="HR Scanner", 
             filters={"document_source": "eu_ai_act"}, 
-            top_k=7
+            top_k=10
         )
         
         # Verify both classifiers were triggered sequentially
@@ -105,3 +106,6 @@ class TestEndToEndPipeline:
         mock_md_instance.generate.assert_called_once()
         mock_pdf_instance = mock_pdf.return_value
         mock_pdf_instance.convert_markdown_to_pdf.assert_called_once()
+
+        # Verify the encrypted forensic trail was written
+        mock_audit_logger.return_value.save_trace.assert_called_once()

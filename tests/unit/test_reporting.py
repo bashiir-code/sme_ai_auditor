@@ -91,17 +91,17 @@ class TestMarkdownGenerator:
             # Formatting checks
             assert "# EU AI Act & Data Act Compliance Assessment Report" in content
             assert "Smart Filter" in content
-            assert "🟥 **BLOCKED (DO NOT DEPLOY)**" in content
-            assert "Limited Risk" in content
+            assert "| Deployment Status | **BLOCKED — DO NOT DEPLOY** |" in content
+            assert "LIMITED RISK" in content
             assert "Article 50" in content
-            assert "✅ **User Disclosure**" in content
+            assert "| 1 | User Disclosure | PASS |" in content
             
             # Data Act
-            assert "**Data Provider Status:** Yes" in content
-            assert "**Data Sharing Readiness:** ❌" in content
+            assert "| Data Provider Status | Yes |" in content
+            assert "| Data Sharing Readiness | Non-Compliant |" in content
             
             # Gaps
-            assert "🚨 [High] Data sharing API" in content
+            assert "### Action 1 — [HIGH] Data sharing API" in content
             assert "`trace-1234`" in content
 
     def test_generate_markdown_deployable_success(self):
@@ -118,7 +118,7 @@ class TestMarkdownGenerator:
             with open(filepath, 'r') as f:
                 content = f.read()
                 
-            assert "🟩 **DEPLOYABLE**" in content
+            assert "| Deployment Status | **APPROVED FOR DEPLOYMENT** |" in content
             assert "No mandatory compliance gaps detected." in content
 
 # ---------------------------------------------------------------------------
@@ -131,7 +131,7 @@ class TestPDFConverter:
 
     def test_missing_markdown_raises_error(self):
         converter = PDFConverter()
-        with pytest.raises(FileNotFoundError, match="Input markdown file not found"):
+        with pytest.raises(FileNotFoundError, match="Markdown file not found"):
             converter.convert_markdown_to_pdf("/fake/path/doesnotexist.md", "/fake/path/out.pdf")
 
     def test_convert_markdown_to_pdf_success(self):
